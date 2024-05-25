@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
 from chat.models import Chat, Message
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -15,3 +18,12 @@ class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         fields = "__all__"
+
+
+class ChatUserSerializer(serializers.ModelSerializer):
+    is_online = serializers.BooleanField(default=False)
+    last_message = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ["id", "is_online", "last_message"]

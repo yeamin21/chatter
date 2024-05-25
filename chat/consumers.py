@@ -1,41 +1,58 @@
 import json
-
+import logging
 from channels.generic.websocket import (
     AsyncJsonWebsocketConsumer,
 )
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.dispatch import receiver
-from chat.models import Chat, Message
+from chat.models import Chat, ChatProfile, Message
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class ActivityConsumer(AsyncJsonWebsocketConsumer):
-    groups = []
-    active_users = {}
+    groups = ["online_users"]
+
+    async def update_chat_profile_status(self, is_online: bool):
+        await ChatProfile.objects.aupdate_or_create(
+            user=self.scope["user"],
+            defaults={"is_online": is_online},
+        )
 
     async def connect(self):
+        self.channel_layer.group_add("online_users", self.channel_name)
         await self.accept()
-        user = self.scope["user"]
-        self.active_users[user.id] = {
-            "username": user.get_username(),
-            "name": user.get_full_name(),
-        }
-        await self.send_json(self.active_users)
+        await self.update_chat_profile_status(True)
+        await self.notify_user_status(user=self.scope["user"], is_online=True)
 
     async def disconnect(self, close_code):
-        user = self.scope["user"]
-        self.active_users.pop(user.id)
-        await self.send_json(self.active_users)
+        await self.channel_layer.group_discard(
+            "online_users",
+            self.channel_name,
+        )
+        await self.update_chat_profile_status(False)
+        await self.notify_user_status(user=self.scope["user"], is_online=False)
 
     async def receive(self, text_data):
-        await self.send_json(text_data)
+        return
+
+    async def notify_user_status(self, user, is_online):
+        await self.channel_layer.group_send(
+            "online_users",
+            {
+                "type": "user_status",
+                "user_id": user.id,
+                "is_online": is_online,
+            },
+        )
+
+    async def user_status(self, event):
+        await self.send_json(event)
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
-    groups = []
-    active_users = {}
     receiver_id: int
 
     # @database_sync_to_async
@@ -74,11 +91,9 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_send(
+        await self.channel_layer.group_discard(
             self.room_group_name,
-            {
-                "type": "user.offline",
-            },
+            self.channel_name,
         )
 
     async def receive(self, text_data):

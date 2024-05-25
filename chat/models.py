@@ -1,15 +1,23 @@
 from typing import Coroutine, Iterable
 from django.db import models
-
-# Create your models here.
-# your_app/models.py
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import models
+
+User = get_user_model()
 
 
 class ChatTypeChoices(models.TextChoices):
     ONE_TO_ONE = "OTO", "One-One"
     GROUP = "GRP", "Group"
+
+
+class ChatProfile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="chat_profile",
+    )
+    is_online = models.BooleanField(default=False)
 
 
 class Chat(models.Model):
