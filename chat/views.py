@@ -2,8 +2,8 @@ from urllib import request
 from django.shortcuts import render
 from rest_framework import viewsets
 
-from chat.models import Chat
-from chat.serializers import ChatSerializer, ChatUserSerializer
+from chat.models import Chat, Message
+from chat.serializers import ChatSerializer, ChatUserSerializer, MessageSerializer
 from django.contrib.auth import get_user_model
 from django.db.models import F, Prefetch
 
@@ -13,6 +13,11 @@ User = get_user_model()
 class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
+
+
+class MessageViewSet(viewsets.ModelViewSet):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
 
 
 class ChatUserViewSet(viewsets.ModelViewSet):
@@ -36,5 +41,5 @@ class ChatUserViewSet(viewsets.ModelViewSet):
                 is_online=F("chat_profile__is_online"),
             )
             .all()
-            .values("id", "last_message", "is_online")
+            .values("id", "last_message", "is_online", "first_name")
         )

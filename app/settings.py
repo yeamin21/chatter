@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-q3sgo4t87d_luoy=7gvn0_cs0xd^zow=qglr0dg+2he3b6=8@+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -40,13 +40,15 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "chat",
     "rest_framework",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    # "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -133,3 +135,4 @@ CHANNEL_LAYERS = {
         },
     },
 }
+CORS_ALLOW_ALL_ORIGINS = True

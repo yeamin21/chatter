@@ -23,7 +23,13 @@ class ChatSerializer(serializers.ModelSerializer):
 class ChatUserSerializer(serializers.ModelSerializer):
     is_online = serializers.BooleanField(default=False)
     last_message = serializers.CharField(read_only=True)
+    name = serializers.CharField(source="first_name")
 
     class Meta:
         model = User
-        fields = ["id", "is_online", "last_message"]
+        fields = [
+            "id",
+            "name",
+            "is_online",
+            "last_message",
+        ]
